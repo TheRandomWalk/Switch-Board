@@ -18,14 +18,14 @@ I am currently using the [NUCLEO-H743ZI](https://www.st.com/en/evaluation-tools/
   - [x] GPIO setup
 - [x] FreeRTOS
 - [x] UART HAL
-- [ ] USB HAL
+- [x] USB HAL
   - [x] CDC serial device
   - [x] MSC disk
-  - [ ] USBTMC
+  - [x] USBTMC
 - [ ] Ethernet HAL
 - [ ] ADC HAL
 - [ ] Logging
 - [ ] CLI
 - [ ] TCP/IP stack
 - [ ] VXI-11
-- [ ] SCPI parser
+- [ ] SCPI engine

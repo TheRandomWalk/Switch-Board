@@ -27,9 +27,12 @@ tusb_desc_device_t const desc_device =
 
     // Use Interface Association Descriptor (IAD) for CDC
     // As required by USB Specs IAD's subclass must be common class (2) and protocol must be IAD (1)
-    .bDeviceClass       = TUSB_CLASS_MISC,
-    .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
-    .bDeviceProtocol    = MISC_PROTOCOL_IAD,
+    // .bDeviceClass       = TUSB_CLASS_MISC,
+    // .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+    // .bDeviceProtocol    = MISC_PROTOCOL_IAD,
+    .bDeviceClass       = 0x00,
+    .bDeviceSubClass    = 0x00,
+    .bDeviceProtocol    = 0x00,
 
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
@@ -60,6 +63,7 @@ enum
     ITF_NUM_CDC = 0,
     ITF_NUM_CDC_DATA,
     ITF_NUM_MSC,
+    ITF_NUM_USBTMC,
     ITF_NUM_TOTAL
 };
 
@@ -71,8 +75,13 @@ enum
 #define EPNUM_MSC_OUT   0x02
 #define EPNUM_MSC_IN    0x83
 
+#define EPNUM_USBTMC_BULK_OUT 0x03
+#define EPNUM_USBTMC_BULK_IN  0x84
+#define EPNUM_USBTMC_INT      0x85
 
-#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN)
+#define TUD_USBTMC_DESC_LEN (TUD_USBTMC_IF_DESCRIPTOR_LEN + TUD_USBTMC_BULK_DESCRIPTORS_LEN + TUD_USBTMC_INT_DESCRIPTOR_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN + TUD_USBTMC_DESC_LEN)
+
 
 uint8_t const desc_fs_configuration[] =
 {
@@ -84,7 +93,17 @@ uint8_t const desc_fs_configuration[] =
 
     // Interface number, string index, EP Out & EP In address, EP size
     TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, 5, EPNUM_MSC_OUT, EPNUM_MSC_IN, 64),
+
+    // Interface number, number of endpoints, string, index, interface protocol
+    TUD_USBTMC_IF_DESCRIPTOR(ITF_NUM_USBTMC, 3,  6, TUD_USBTMC_PROTOCOL_USB488),
+    
+    // EP bulk address (out, in), packet size
+    TUD_USBTMC_BULK_DESCRIPTORS(EPNUM_USBTMC_BULK_OUT, EPNUM_USBTMC_BULK_IN, 64),
+    
+    // EP interrupt address
+    TUD_USBTMC_INT_DESCRIPTOR(EPNUM_USBTMC_INT, /* epMaxSize = */ 8, /* bInterval = */16u ),
 };
+
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
@@ -104,9 +123,10 @@ char const* string_desc_arr[] =
     (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
     MANUFACTURER,                  // 1: Manufacturer
     PRODUCT,                       // 2: Product
-    "123456789012",                // 3: Serials, should use chip ID
+    "112233445566778899AABB",      // 3: Serials, should use chip ID
     PRODUCT " CDC",                // 4: CDC Interface
     PRODUCT " MSC",                // 5: MSC Interface
+    PRODUCT " TMC",                // 6: TMC Interface
 };
 
 static uint16_t _desc_str[32];
@@ -127,7 +147,7 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
 
-        if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) 
+        if ( !(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])) ) 
             return NULL;
 
         const char* str = string_desc_arr[index];

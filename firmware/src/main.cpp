@@ -16,10 +16,12 @@
 #include "usart.h"
 #include "systick.h"
 
+#include "usb_tmc.h"
 
 // Increase stack size when debug log is enabled
 #define USBD_STACK_SIZE    (3*configMINIMAL_STACK_SIZE/2) * (CFG_TUSB_DEBUG ? 2 : 1)
 #define CDC_STACK_SIZE      configMINIMAL_STACK_SIZE
+#define TMC_STACK_SIZE      configMINIMAL_STACK_SIZE
 
 StackType_t  usb_device_stack[USBD_STACK_SIZE];
 StaticTask_t usb_device_taskdef;
@@ -30,6 +32,7 @@ StaticTask_t cdc_taskdef;
 
 void usb_device_task(void* param);
 void cdc_task(void* params);
+void tmc_task(void* params);
 
 //--------------------------------------------------------------------+
 // Main
@@ -53,8 +56,9 @@ int main(void)
 
     vPortDefineHeapRegions(heap_region);
  
-    xTaskCreate( usb_device_task, "usbd", USBD_STACK_SIZE, NULL, configMAX_PRIORITIES-1, NULL);
-    xTaskCreate( cdc_task, "cdc", CDC_STACK_SIZE, NULL, configMAX_PRIORITIES-2, NULL);
+    xTaskCreate(usb_device_task, "USBD", USBD_STACK_SIZE, NULL, configMAX_PRIORITIES-1, NULL);
+    xTaskCreate(cdc_task, "CDC", CDC_STACK_SIZE, NULL, configMAX_PRIORITIES-2, NULL);
+    xTaskCreate(tmc_task, "TMC", TMC_STACK_SIZE, NULL, configMAX_PRIORITIES-2, NULL);
 
     vTaskStartScheduler();
 
@@ -121,6 +125,16 @@ void cdc_task(void* params)
         }
 
         // For ESP32-Sx this delay is essential to allow idle how to run and reset watchdog
+        vTaskDelay(1);
+    }
+}
+
+
+void tmc_task(void* params)
+{
+    while (true)
+    {
+        usbtmc_app_task_iter();
         vTaskDelay(1);
     }
 }

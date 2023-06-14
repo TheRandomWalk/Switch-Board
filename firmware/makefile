@@ -68,6 +68,7 @@ OBJ += build/usb_descriptors.o
 OBJ += build/usb_device.o
 OBJ += build/usb_cdc.o
 OBJ += build/usb_msc.o
+OBJ += build/usb_tmc.o
 OBJ += build/lib/CMSIS/STM32H7xx/Source/Templates/system_stm32h7xx.o
 OBJ += build/lib/FreeRTOS-Kernel/croutine.o
 OBJ += build/lib/FreeRTOS-Kernel/event_groups.o
